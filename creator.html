@@ -1,76 +1,133 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Hologram Creator</title>
+  <title>Editable Hologram Face</title>
   <style>
     body {
       background: black;
+      color: white;
+      font-family: Arial;
       display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
       margin: 0;
     }
 
+    #controls {
+      width: 250px;
+      padding: 15px;
+      background: #111;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
     canvas {
+      flex: 1;
       background: black;
     }
   </style>
 </head>
 <body>
 
-<canvas id="holoCanvas" width="600" height="600"></canvas>
+<div id="controls">
+  <h3>Hologram Controls</h3>
+
+  <label>Head Size</label>
+  <input type="range" id="headSize" min="80" max="180" value="120">
+
+  <label>Eye Size</label>
+  <input type="range" id="eyeSize" min="5" max="25" value="10">
+
+  <label>Mouth Size</label>
+  <input type="range" id="mouthSize" min="20" max="80" value="40">
+
+  <label>Color</label>
+  <input type="color" id="color" value="#00ffff">
+
+  <label>Animation Speed</label>
+  <input type="range" id="speed" min="1" max="10" value="5">
+</div>
+
+<canvas id="holoCanvas" width="900" height="900"></canvas>
 
 <script>
 const canvas = document.getElementById("holoCanvas");
 const ctx = canvas.getContext("2d");
 
-let angle = 0;
+let t = 0;
 
-function drawHologram() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  const size = 150;
-
-  function drawObject(x, y, rotation) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(rotation);
-
-    // glowing effect
-    for (let i = 0; i < 10; i++) {
-      ctx.beginPath();
-      ctx.strokeStyle = `rgba(0,255,255,${0.1})`;
-      ctx.arc(0, 0, size + i * 5 + Math.sin(angle)*10, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    ctx.beginPath();
-    ctx.strokeStyle = "#00ffff";
-    ctx.lineWidth = 2;
-    ctx.arc(0, 0, size + Math.sin(angle)*10, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
-  // Top
-  drawObject(300, 150, 0);
-
-  // Bottom
-  drawObject(300, 450, Math.PI);
-
-  // Left
-  drawObject(150, 300, -Math.PI / 2);
-
-  // Right
-  drawObject(450, 300, Math.PI / 2);
-
-  angle += 0.05;
-  requestAnimationFrame(drawHologram);
+function getVal(id) {
+  return document.getElementById(id).value;
 }
 
-drawHologram();
+function drawFace(x, y, rotation) {
+  const headSize = parseInt(getVal("headSize"));
+  const eyeSize = parseInt(getVal("eyeSize"));
+  const mouthSize = parseInt(getVal("mouthSize"));
+  const color = getVal("color");
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+
+  // glow
+  for (let g = 0; g < 6; g++) {
+    ctx.globalAlpha = 0.08;
+    ctx.beginPath();
+    ctx.arc(0, 0, headSize + g * 8 + Math.sin(t)*5, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = 1;
+
+  // head
+  ctx.beginPath();
+  ctx.arc(0, 0, headSize, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // eyes
+  ctx.beginPath();
+  ctx.arc(-headSize/3, -headSize/6, eyeSize + Math.sin(t)*2, 0, Math.PI * 2);
+  ctx.arc(headSize/3, -headSize/6, eyeSize + Math.sin(t)*2, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // mouth
+  ctx.beginPath();
+  ctx.arc(0, headSize/4, mouthSize, 0, Math.PI);
+  ctx.stroke();
+
+  // scanlines
+  for (let i = -headSize; i < headSize; i += 6) {
+    ctx.globalAlpha = 0.05;
+    ctx.beginPath();
+    ctx.moveTo(-headSize, i + (t*20 % 6));
+    ctx.lineTo(headSize, i + (t*20 % 6));
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  drawFace(450, 200, 0);
+  drawFace(450, 700, Math.PI);
+  drawFace(200, 450, -Math.PI / 2);
+  drawFace(700, 450, Math.PI / 2);
+
+  const speed = getVal("speed") / 100;
+  t += speed;
+
+  requestAnimationFrame(animate);
+}
+
+animate();
 </script>
 
 </body>
