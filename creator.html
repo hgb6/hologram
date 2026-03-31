@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hologram Creator</title>
+  <style>
+    body {
+      background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    canvas {
+      background: black;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="holoCanvas" width="600" height="600"></canvas>
+
+<script>
+const canvas = document.getElementById("holoCanvas");
+const ctx = canvas.getContext("2d");
+
+let angle = 0;
+
+function drawHologram() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const size = 150;
+
+  function drawObject(x, y, rotation) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+
+    // glowing effect
+    for (let i = 0; i < 10; i++) {
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(0,255,255,${0.1})`;
+      ctx.arc(0, 0, size + i * 5 + Math.sin(angle)*10, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    ctx.beginPath();
+    ctx.strokeStyle = "#00ffff";
+    ctx.lineWidth = 2;
+    ctx.arc(0, 0, size + Math.sin(angle)*10, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // Top
+  drawObject(300, 150, 0);
+
+  // Bottom
+  drawObject(300, 450, Math.PI);
+
+  // Left
+  drawObject(150, 300, -Math.PI / 2);
+
+  // Right
+  drawObject(450, 300, Math.PI / 2);
+
+  angle += 0.05;
+  requestAnimationFrame(drawHologram);
+}
+
+drawHologram();
+</script>
+
+</body>
+</html>
